@@ -1,0 +1,29 @@
+{
+  "name": "lab-rounder",
+  "version": "1.0.0",
+  "description": "Laboratory round and some statistics calculation methods.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "mocha",
+    "dev": "rollup -c"
+  },
+  "keywords": [
+    "round",
+    "statistics",
+    "scientific"
+  ],
+  "author": "Anqing-None",
+  "license": "ISC",
+  "dependencies": {
+    "decimal.js": "^10.4.3"
+  },
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^15.0.1",
+    "@rollup/plugin-typescript": "^11.0.0",
+    "@types/node": "^18.11.18",
+    "mocha": "^10.2.0",
+    "rollup": "^3.10.0",
+    "tslib": "^2.4.1"
+  }
+}
