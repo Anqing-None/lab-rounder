@@ -154,10 +154,16 @@ class Rounder {
   }
 
   static scientificStrToNum(sciStr: string): number {
-    const baseNumberMap = { "º": 0, "¹": 1, "²": 2, "³": 3, "⁴": 4, "⁵": 5, "⁶": 6, "⁷": 7, "⁸": 8, "⁹": 9, "⁻¹": "-1", "⁻²": "-2", "⁻³": "-3", "⁻⁴": "-4", "⁻⁵": "-5", "⁻⁶": "-6", "⁻⁷": "-7", "⁻⁸": "-8", "⁻⁹": "-9" };
+    const baseNumberMap = { "º": 0, "¹": 1, "²": 2, "³": 3, "⁴": 4, "⁵": 5, "⁶": 6, "⁷": 7, "⁸": 8, "⁹": 9, "⁻¹": "-1", "⁻²": "-2", "⁻³": "-3", "⁻⁴": "-4", "⁻⁵": "-5", "⁻⁶": "-6", "⁻⁷": "-7", "⁻⁸": "-8", "⁻⁹": "-9", "⁻": "-" };
     if (sciStr.includes('×10')) {
       const [m, n] = sciStr.split('×10'); //m × 10n
-      const retNum = new decimal(Number(m)).mul(decimal.pow(10, baseNumberMap[n])).toNumber();
+      const strN = `${n}`;
+      let supN = '';
+      for (let i = 0; i < strN.length; i++) {
+        const str = strN[i];
+        supN += baseNumberMap[str];
+      }
+      const retNum = new decimal(Number(m)).mul(decimal.pow(10, supN)).toNumber();
       return retNum;
     } else {
       const num = Number(sciStr);
@@ -169,7 +175,7 @@ class Rounder {
   }
 
   static numToScientificStr(num: number, validDigit: number): string {
-    const supNumberMap = { 0: "º", 1: "¹", 2: "²", 3: "³", 4: "⁴", 5: "⁵", 6: "⁶", 7: "⁷", 8: "⁸", 9: "⁹", "-1": "⁻¹", "-2": "⁻²", "-3": "⁻³", "-4": "⁻⁴", "-5": "⁻⁵", "-6": "⁻⁶", "-7": "⁻⁷", "-8": "⁻⁸", "-9": "⁻⁹" }
+    const supNumberMap = { 0: "º", 1: "¹", 2: "²", 3: "³", 4: "⁴", 5: "⁵", 6: "⁶", 7: "⁷", 8: "⁸", 9: "⁹", "-1": "⁻¹", "-2": "⁻²", "-3": "⁻³", "-4": "⁻⁴", "-5": "⁻⁵", "-6": "⁻⁶", "-7": "⁻⁷", "-8": "⁻⁸", "-9": "⁻⁹", "-": "⁻" }
     const splitString = Math.abs(num) >= 1 ? 'e+' : 'e';
 
     const expNum = num.toExponential(); // 0: 0e+0 , 1000: 1e+3 , 1210: 1.21e+3
@@ -186,7 +192,14 @@ class Rounder {
     let roundedM: string = Number(Rounder.Round(Math.abs(Number(m)), ValidDigitNum)).toPrecision(validDigit);
     // num为负数的处理，加个负号
     num < 0 ? roundedM = `-${roundedM}` : '';
-    const retStr: string = `${roundedM}×10${supNumberMap[n]}`;
+    let sup = ``;
+    let strN = `${n}`;
+    for (let i = 0; i < strN.length; i++) {
+      const str = strN[i];
+      console.log(str)
+      sup += supNumberMap[str];
+    }
+    const retStr: string = `${roundedM}×10${sup}`;
     return retStr;
   }
 

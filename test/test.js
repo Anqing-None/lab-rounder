@@ -133,6 +133,28 @@ describe("labRounder", function () {
       const r = Rounder.numToScientificStr(1150, 3);
       strictEqual(r, '1.15×10³')
     })
+    it('numToScientificStr(100000000000000, 3) -> 1.00×10¹³', () => {
+      const r = Rounder.numToScientificStr(10000000000000, 3);
+      strictEqual(r, '1.00×10¹³')
+      const r2 = Rounder.numToScientificStr(0.0000000000001, 3)
+      strictEqual(r2, '1.00×10⁻¹³')
+
+    })
+
+  })
+
+  describe('Rounder.scientificStrToNum', () => {
+    it('scientificStrToNum(1.03×10³) -> 1030', () => {
+      const r = Rounder.scientificStrToNum('1.03×10³');
+      strictEqual(r, 1030)
+    })
+
+    it('scientificStrToNum(1.00×10¹³) -> 10000000000000', () => {
+      const r = Rounder.scientificStrToNum('1.00×10¹³');
+      strictEqual(r, 10000000000000)
+      const r2 = Rounder.scientificStrToNum('1.00×10⁻¹³')
+      strictEqual(r2, 0.0000000000001)
+    })
 
   })
 

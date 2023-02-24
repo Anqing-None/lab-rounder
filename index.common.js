@@ -5063,10 +5063,16 @@ var Rounder = /** @class */ (function () {
         return RSD;
     };
     Rounder.scientificStrToNum = function (sciStr) {
-        var baseNumberMap = { "º": 0, "¹": 1, "²": 2, "³": 3, "⁴": 4, "⁵": 5, "⁶": 6, "⁷": 7, "⁸": 8, "⁹": 9, "⁻¹": "-1", "⁻²": "-2", "⁻³": "-3", "⁻⁴": "-4", "⁻⁵": "-5", "⁻⁶": "-6", "⁻⁷": "-7", "⁻⁸": "-8", "⁻⁹": "-9" };
+        var baseNumberMap = { "º": 0, "¹": 1, "²": 2, "³": 3, "⁴": 4, "⁵": 5, "⁶": 6, "⁷": 7, "⁸": 8, "⁹": 9, "⁻¹": "-1", "⁻²": "-2", "⁻³": "-3", "⁻⁴": "-4", "⁻⁵": "-5", "⁻⁶": "-6", "⁻⁷": "-7", "⁻⁸": "-8", "⁻⁹": "-9", "⁻": "-" };
         if (sciStr.includes('×10')) {
             var _a = sciStr.split('×10'), m = _a[0], n = _a[1]; //m × 10n
-            var retNum = new Decimal(Number(m)).mul(Decimal.pow(10, baseNumberMap[n])).toNumber();
+            var strN = "".concat(n);
+            var supN = '';
+            for (var i = 0; i < strN.length; i++) {
+                var str = strN[i];
+                supN += baseNumberMap[str];
+            }
+            var retNum = new Decimal(Number(m)).mul(Decimal.pow(10, supN)).toNumber();
             return retNum;
         }
         else {
@@ -5078,7 +5084,7 @@ var Rounder = /** @class */ (function () {
         }
     };
     Rounder.numToScientificStr = function (num, validDigit) {
-        var supNumberMap = { 0: "º", 1: "¹", 2: "²", 3: "³", 4: "⁴", 5: "⁵", 6: "⁶", 7: "⁷", 8: "⁸", 9: "⁹", "-1": "⁻¹", "-2": "⁻²", "-3": "⁻³", "-4": "⁻⁴", "-5": "⁻⁵", "-6": "⁻⁶", "-7": "⁻⁷", "-8": "⁻⁸", "-9": "⁻⁹" };
+        var supNumberMap = { 0: "º", 1: "¹", 2: "²", 3: "³", 4: "⁴", 5: "⁵", 6: "⁶", 7: "⁷", 8: "⁸", 9: "⁹", "-1": "⁻¹", "-2": "⁻²", "-3": "⁻³", "-4": "⁻⁴", "-5": "⁻⁵", "-6": "⁻⁶", "-7": "⁻⁷", "-8": "⁻⁸", "-9": "⁻⁹", "-": "⁻" };
         var splitString = Math.abs(num) >= 1 ? 'e+' : 'e';
         var expNum = num.toExponential(); // 0: 0e+0 , 1000: 1e+3 , 1210: 1.21e+3
         var _a = expNum.toString().split(splitString), m = _a[0], n = _a[1]; //m × 10n, 当num小于0时，m为负数，当num为小数时，n为负数
@@ -5094,7 +5100,14 @@ var Rounder = /** @class */ (function () {
         var roundedM = Number(Rounder.Round(Math.abs(Number(m)), ValidDigitNum)).toPrecision(validDigit);
         // num为负数的处理，加个负号
         num < 0 ? roundedM = "-".concat(roundedM) : '';
-        var retStr = "".concat(roundedM, "\u00D710").concat(supNumberMap[n]);
+        var sup = "";
+        var strN = "".concat(n);
+        for (var i = 0; i < strN.length; i++) {
+            var str = strN[i];
+            console.log(str);
+            sup += supNumberMap[str];
+        }
+        var retStr = "".concat(roundedM, "\u00D710").concat(sup);
         return retStr;
     };
     /**
