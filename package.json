@@ -2,8 +2,9 @@
   "name": "lab-rounder",
   "version": "1.0.1",
   "description": "Laboratory round and some statistics calculation methods.",
-  "main": "index.js",
+  "main": "index.common.js",
   "type": "module",
+  "module": "index.es.js",
   "scripts": {
     "test": "mocha",
     "dev": "rollup -c -w"
@@ -19,6 +20,7 @@
     "decimal.js": "^10.4.3"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^24.0.1",
     "@rollup/plugin-node-resolve": "^15.0.1",
     "@rollup/plugin-typescript": "^11.0.0",
     "@types/node": "^18.11.18",

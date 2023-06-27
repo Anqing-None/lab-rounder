@@ -4898,56 +4898,34 @@ var Rounder = /** @class */ (function () {
         this.isNegative = false;
         this.isZero = false;
         this.isScientificStr = false;
-        if (num < 0)
-            this.isNegative = true;
-        if (+num === 0)
-            this.isZero = true;
+        num = "".concat(num).trim();
         if ("".concat(num).includes("\u00D710")) {
             this.isScientificStr = true;
             this.scientificStr = "".concat(num);
             num = Rounder.scientificStrToNum("".concat(num));
         }
+        else if (!Rounder.isValidNumber(num)) {
+            num = 0;
+        }
+        if (!"".concat(num).includes("\u00D710") && +num < 0)
+            this.isNegative = true;
+        if (+num === 0)
+            this.isZero = true;
         this.num = num;
     }
-    Rounder.Round = function (num, decimalPlace) {
+    Rounder.roundDown = function (num, decimalPlace) {
         var isNegative = false;
         if (num < 0) {
             isNegative = true;
             num = Math.abs(num);
         }
-        decimalPlace < 0 ? decimalPlace = 0 : "";
+        decimalPlace < 0 ? (decimalPlace = 0) : "";
         if (num === 0) {
             if (decimalPlace === 0)
                 return "0";
-            var str = '0.';
+            var str = "0.";
             for (var i = 0; i < decimalPlace; i++) {
-                str += '0';
-            }
-            return str;
-        }
-        var judge = new Decimal(num).mul(Math.pow(10, decimalPlace)).toNumber();
-        if (Math.abs(judge) % 2 == 0.5) {
-            var ret = Rounder.RoundDown(num, decimalPlace);
-            return isNegative ? "-".concat(ret) : ret;
-        }
-        else {
-            var ret = Rounder.RoundNormal(num, decimalPlace);
-            return isNegative ? "-".concat(ret) : ret;
-        }
-    };
-    Rounder.RoundDown = function (num, decimalPlace) {
-        var isNegative = false;
-        if (num < 0) {
-            isNegative = true;
-            num = Math.abs(num);
-        }
-        decimalPlace < 0 ? decimalPlace = 0 : "";
-        if (num === 0) {
-            if (decimalPlace === 0)
-                return "0";
-            var str = '0.';
-            for (var i = 0; i < decimalPlace; i++) {
-                str += '0';
+                str += "0";
             }
             return str;
         }
@@ -4956,7 +4934,7 @@ var Rounder = /** @class */ (function () {
         ret = roundDownRet.toFixed(decimalPlace);
         return isNegative ? "-".concat(ret) : ret;
     };
-    Rounder.RoundNormal = function (num, decimalPlace) {
+    Rounder.roundNormal = function (num, decimalPlace) {
         var isNegative = false;
         if (num < 0) {
             isNegative = true;
@@ -4965,17 +4943,71 @@ var Rounder = /** @class */ (function () {
         if (num === 0) {
             if (Number(decimalPlace) === 0)
                 return "0";
-            var str = '0.';
+            var str = "0.";
             for (var i = 0; i < decimalPlace; i++) {
-                str += '0';
+                str += "0";
             }
             return str;
         }
-        decimalPlace < 0 ? decimalPlace = 0 : "";
+        decimalPlace < 0 ? (decimalPlace = 0) : "";
         var ret = "".concat(num);
         var roundNormalRet = Math.round(Number("".concat(num, "e").concat(decimalPlace))) / Math.pow(10, decimalPlace);
         ret = roundNormalRet.toFixed(decimalPlace);
         return isNegative ? "-".concat(ret) : ret;
+    };
+    Rounder.roundHalfToEven = function (num, decimalPlace) {
+        var isNegative = false;
+        if (num < 0) {
+            isNegative = true;
+            num = Math.abs(num);
+        }
+        decimalPlace < 0 ? (decimalPlace = 0) : "";
+        if (num === 0) {
+            if (decimalPlace === 0)
+                return "0";
+            var str = "0.";
+            for (var i = 0; i < decimalPlace; i++) {
+                str += "0";
+            }
+            return str;
+        }
+        var judge = new Decimal(num).mul(Math.pow(10, decimalPlace)).toNumber();
+        if (Math.abs(judge) % 2 == 0.5) {
+            var ret = Rounder.roundDown(num, decimalPlace);
+            return isNegative ? "-".concat(ret) : ret;
+        }
+        else {
+            var ret = Rounder.roundNormal(num, decimalPlace);
+            return isNegative ? "-".concat(ret) : ret;
+        }
+    };
+    Rounder.roundSignificantDigit = function (num, digit) {
+        if (digit <= 0)
+            return "".concat(num);
+        var isNegtive = false;
+        if (Number(num) < 0) {
+            isNegtive = true;
+            num = Math.abs(Number(num));
+        }
+        else if (Number(num) == 0) {
+            if (digit === 0)
+                return "0";
+            var str = "0.";
+            for (var i = 0; i < digit; i++) {
+                str = str + "0";
+            }
+            return str;
+        }
+        var decimalBeforeLen = Decimal.log10(num).floor().toNumber() + 1;
+        var roundPosDigit = digit - decimalBeforeLen;
+        var ret = "".concat(num);
+        if (roundPosDigit < 0) {
+            ret = Rounder.numToScientificStr(Number(num), digit);
+        }
+        else {
+            ret = Rounder.roundHalfToEven(Number(num), roundPosDigit);
+        }
+        return isNegtive ? "-".concat(ret) : ret;
     };
     /**
      *
@@ -4995,8 +5027,8 @@ var Rounder = /** @class */ (function () {
         var sum = new Decimal(0);
         var count = 0;
         numList.forEach(function (num) {
-            if (typeof +num != 'number') {
-                console.debug('AVG: not a number');
+            if (typeof +num != "number") {
+                console.debug("AVG: not a number");
                 return;
             }
             sum = sum.add(Number(num));
@@ -5011,6 +5043,22 @@ var Rounder = /** @class */ (function () {
         var AD = new Decimal(numList[refPos]).minus(avg).toNumber();
         return AD;
     };
+    // mean deviation 简单平均偏差
+    Rounder.calcMD = function () {
+        var numList = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            numList[_i] = arguments[_i];
+        }
+        var avg = Rounder.calcAvg.apply(Rounder, numList);
+        var subSum = 0;
+        for (var i = 0; i < numList.length; i++) {
+            var num = numList[i];
+            var sub = new Decimal(num).minus(avg).abs().toNumber();
+            subSum += sub;
+        }
+        var MD = new Decimal(subSum).div(numList.length).toString();
+        return MD;
+    };
     // 两个值计算相对偏差，(a-b)/(a+b)
     Rounder.calc2RD = function () {
         var numList = [];
@@ -5020,8 +5068,8 @@ var Rounder = /** @class */ (function () {
         // if (refPos > numList.length - 1) throw Error(`refPos is not a valid position index for numList`);
         // const AD = Rounder.calcAD(numList, refPos);
         // const RD = new decimal(numList[refPos]).minus(AD)
-        var a = '0';
-        var b = '0';
+        var a = "0";
+        var b = "0";
         a = numList[0], b = numList[1];
         var step1 = new Decimal(a).minus(b).abs(); // a - b
         var step2 = new Decimal(a).add(b); // a + b
@@ -5041,7 +5089,10 @@ var Rounder = /** @class */ (function () {
             var xiMinusAvgPow = new Decimal(x).minus(avg).pow(2);
             xiMinusAvgPowSum = xiMinusAvgPowSum.add(xiMinusAvgPow);
         }
-        var SD = new Decimal(xiMinusAvgPowSum).div(numList.length - 1).pow(0.5).toNumber();
+        var SD = new Decimal(xiMinusAvgPowSum)
+            .div(numList.length - 1)
+            .pow(0.5)
+            .toNumber();
         return SD;
     };
     // RSD
@@ -5061,16 +5112,39 @@ var Rounder = /** @class */ (function () {
         return RSD;
     };
     Rounder.scientificStrToNum = function (sciStr) {
-        var baseNumberMap = { "º": 0, "¹": 1, "²": 2, "³": 3, "⁴": 4, "⁵": 5, "⁶": 6, "⁷": 7, "⁸": 8, "⁹": 9, "⁻¹": "-1", "⁻²": "-2", "⁻³": "-3", "⁻⁴": "-4", "⁻⁵": "-5", "⁻⁶": "-6", "⁻⁷": "-7", "⁻⁸": "-8", "⁻⁹": "-9", "⁻": "-" };
-        if (sciStr.includes('×10')) {
-            var _a = sciStr.split('×10'), m = _a[0], n = _a[1]; //m × 10n
+        var baseNumberMap = {
+            º: 0,
+            "¹": 1,
+            "²": 2,
+            "³": 3,
+            "⁴": 4,
+            "⁵": 5,
+            "⁶": 6,
+            "⁷": 7,
+            "⁸": 8,
+            "⁹": 9,
+            "⁻¹": "-1",
+            "⁻²": "-2",
+            "⁻³": "-3",
+            "⁻⁴": "-4",
+            "⁻⁵": "-5",
+            "⁻⁶": "-6",
+            "⁻⁷": "-7",
+            "⁻⁸": "-8",
+            "⁻⁹": "-9",
+            "⁻": "-"
+        };
+        if (sciStr.includes("×10")) {
+            var _a = sciStr.split("×10"), m = _a[0], n = _a[1]; //m × 10n
             var strN = "".concat(n);
-            var supN = '';
+            var supN = "";
             for (var i = 0; i < strN.length; i++) {
                 var str = strN[i];
                 supN += baseNumberMap[str];
             }
-            var retNum = new Decimal(Number(m)).mul(Decimal.pow(10, supN)).toNumber();
+            var retNum = new Decimal(Number(m))
+                .mul(Decimal.pow(10, supN))
+                .toNumber();
             return retNum;
         }
         else {
@@ -5081,23 +5155,44 @@ var Rounder = /** @class */ (function () {
             return num;
         }
     };
-    Rounder.numToScientificStr = function (num, validDigit) {
-        var supNumberMap = { 0: "º", 1: "¹", 2: "²", 3: "³", 4: "⁴", 5: "⁵", 6: "⁶", 7: "⁷", 8: "⁸", 9: "⁹", "-1": "⁻¹", "-2": "⁻²", "-3": "⁻³", "-4": "⁻⁴", "-5": "⁻⁵", "-6": "⁻⁶", "-7": "⁻⁷", "-8": "⁻⁸", "-9": "⁻⁹", "-": "⁻" };
-        var splitString = Math.abs(num) >= 1 ? 'e+' : 'e';
+    Rounder.numToScientificStr = function (num, digit) {
+        var supNumberMap = {
+            0: "º",
+            1: "¹",
+            2: "²",
+            3: "³",
+            4: "⁴",
+            5: "⁵",
+            6: "⁶",
+            7: "⁷",
+            8: "⁸",
+            9: "⁹",
+            "-1": "⁻¹",
+            "-2": "⁻²",
+            "-3": "⁻³",
+            "-4": "⁻⁴",
+            "-5": "⁻⁵",
+            "-6": "⁻⁶",
+            "-7": "⁻⁷",
+            "-8": "⁻⁸",
+            "-9": "⁻⁹",
+            "-": "⁻"
+        };
+        var splitString = Math.abs(num) >= 1 ? "e+" : "e";
         var expNum = num.toExponential(); // 0: 0e+0 , 1000: 1e+3 , 1210: 1.21e+3
         var _a = expNum.toString().split(splitString), m = _a[0], n = _a[1]; //m × 10n, 当num小于0时，m为负数，当num为小数时，n为负数
         // 修约到有效位数
         // 判断有效位数
-        var ValidDigitNum = validDigit;
+        var ValidDigitNum = digit;
         if (Number(m) >= 1) {
             var strm = String(m);
-            var decimalBeforeNum = strm.split('.')[0];
+            var decimalBeforeNum = strm.split(".")[0];
             var decimalBeforeLen = decimalBeforeNum.length;
             ValidDigitNum = ValidDigitNum - decimalBeforeLen;
         }
-        var roundedM = Number(Rounder.Round(Math.abs(Number(m)), ValidDigitNum)).toPrecision(validDigit);
+        var roundedM = Number(Rounder.roundHalfToEven(Math.abs(Number(m)), ValidDigitNum)).toPrecision(digit);
         // num为负数的处理，加个负号
-        num < 0 ? roundedM = "-".concat(roundedM) : '';
+        num < 0 ? (roundedM = "-".concat(roundedM)) : "";
         var sup = "";
         var strN = "".concat(n);
         for (var i = 0; i < strN.length; i++) {
@@ -5109,10 +5204,10 @@ var Rounder = /** @class */ (function () {
         return retStr;
     };
     /**
-       * 判断复核数值类型的字符串 / 数值
-       * @param value 是否为一个有效的数据
-       * @returns boolean
-       */
+     * 判断复核数值类型的字符串 / 数值
+     * @param num 是否为一个有效的数据
+     * @returns boolean
+     */
     Rounder.isValidNumber = function (value) {
         var ret = true;
         if (isNaN(+value)) {
@@ -5124,10 +5219,137 @@ var Rounder = /** @class */ (function () {
         if (value == null) {
             ret = false;
         }
-        if (String(value).trim() == '') {
+        if (String(value).trim() == "") {
             ret = false;
         }
         return ret;
+    };
+    /**
+     * 一元线性回归斜率b值计算
+     * @param {Array} listx x轴的值
+     * @param {Array} listy y轴的值
+     * @param {number} precision 斜率的保留小数位
+     * @returns {String}  y = a + bx   返回修约后的b
+     */
+    Rounder.calcSlope = function (listx, listy, precision) {
+        if (precision === void 0) { precision = 2; }
+        try {
+            var xList = listx.filter(function (i) { return "".concat(i).trim() != ""; });
+            var yList = listy.filter(function (i) { return "".concat(i).trim() != ""; });
+            // 计算公式
+            // https://baike.baidu.com/item/%E4%B8%80%E5%85%83%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E6%96%B9%E7%A8%8B
+            var len = Math.min(xList.length, yList.length);
+            var calcxList = xList.slice(0, len);
+            var calcyList = yList.slice(0, len);
+            var avgX = Rounder.calcAvg.apply(Rounder, calcxList);
+            var avgY = Rounder.calcAvg.apply(Rounder, calcyList);
+            var multiSum = new Decimal(0);
+            var xMinusXAvgPow2Sum = new Decimal(0);
+            for (var i = 0; i < len; i++) {
+                var x = calcxList[i];
+                var y = calcyList[i];
+                var xMinusXAvg = new Decimal(x).minus(avgX);
+                var yMinusYAvg = new Decimal(y).minus(avgY);
+                var multi = xMinusXAvg.mul(yMinusYAvg);
+                multiSum = multiSum.add(multi);
+                var xMinusXAvgPow2 = Decimal.pow(xMinusXAvg, 2);
+                xMinusXAvgPow2Sum = xMinusXAvgPow2Sum.add(xMinusXAvgPow2);
+            }
+            var originB = multiSum.div(xMinusXAvgPow2Sum).toString();
+            var roundedB = Rounder.roundHalfToEven(+originB, precision);
+            return roundedB || "";
+        }
+        catch (error) {
+            console.debug("SLOPE claculate failed. ", "listx: ", listx, "listy: ", listy, precision);
+        }
+    };
+    /**
+     * 一元线性回归截距a值计算
+     * @param {Array} listx x轴的值
+     * @param {Array} listy y轴的值
+     * @param {number} precision 截距的保留小数位
+     * @returns {String} y = a + bx   返回修约后的a
+     */
+    Rounder.calcIntercept = function (listx, listy, precision) {
+        if (precision === void 0) { precision = 2; }
+        try {
+            // const { table: list } = this.datasource;
+            var xList = listx.filter(function (i) { return "".concat(i).trim() != ""; });
+            var yList = listy.filter(function (i) { return "".concat(i).trim() != ""; });
+            // 计算公式
+            // https://baike.baidu.com/item/%E4%B8%80%E5%85%83%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E6%96%B9%E7%A8%8B
+            var len = Math.min(xList.length, yList.length);
+            var calcxList = xList.slice(0, len);
+            var calcyList = yList.slice(0, len);
+            var avgX = Rounder.calcAvg.apply(Rounder, calcxList);
+            var avgY = Rounder.calcAvg.apply(Rounder, calcyList);
+            var multiSum = new Decimal(0);
+            var xMinusXAvgPow2Sum = new Decimal(0);
+            for (var i = 0; i < len; i++) {
+                var x = calcxList[i];
+                var y = calcyList[i];
+                var xMinusXAvg = new Decimal(x).minus(avgX);
+                var yMinusYAvg = new Decimal(y).minus(avgY);
+                var multi = xMinusXAvg.mul(yMinusYAvg);
+                multiSum = multiSum.add(multi);
+                var xMinusXAvgPow2 = Decimal.pow(xMinusXAvg, 2);
+                xMinusXAvgPow2Sum = xMinusXAvgPow2Sum.add(xMinusXAvgPow2);
+            }
+            var originB = multiSum.div(xMinusXAvgPow2Sum);
+            var originA = new Decimal(avgY)
+                .minus(new Decimal(originB).mul(avgX))
+                .toString();
+            var roundedA = Rounder.roundHalfToEven(+originA, precision);
+            return roundedA || "";
+        }
+        catch (error) {
+            console.debug("INTERCEPT claculate", "xList: ", listx, "yList: ", listy, "precision: ", precision);
+        }
+    };
+    /**
+     * 返回两组数值的相关系数
+     * @param {Array} listx x轴的值
+     * @param {Array} listy y轴的值
+     * @param {number} precision R值的保留小数位
+     * @returns {String} 返回向下修约后的r
+     */
+    Rounder.calcCorrel = function (listx, listy, precision) {
+        if (precision === void 0) { precision = 4; }
+        try {
+            var xList = listx.filter(function (i) { return "".concat(i).trim() != ""; });
+            var yList = listy.filter(function (i) { return "".concat(i).trim() != ""; });
+            // 计算公式
+            // https://baike.baidu.com/item/%E4%B8%80%E5%85%83%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E6%96%B9%E7%A8%8B
+            var len = Math.min(xList.length, yList.length);
+            var calcxList = xList.slice(0, len);
+            var calcyList = yList.slice(0, len);
+            var avgX = Rounder.calcAvg.apply(Rounder, calcxList);
+            var avgY = Rounder.calcAvg.apply(Rounder, calcyList);
+            var xMinusXAvgMulyMinusYAvgSum = new Decimal(0);
+            var xMinusXAvgPowSum = new Decimal(0);
+            var yMinusYAvgPowSum = new Decimal(0);
+            for (var i = 0; i < len; i++) {
+                var x = calcxList[i];
+                var y = calcyList[i];
+                var xMinusXAvg = new Decimal(x).minus(avgX);
+                var yMinusYAvg = new Decimal(y).minus(avgY);
+                var xMinusXAvgMulyMinusYAvg = new Decimal(xMinusXAvg).mul(yMinusYAvg);
+                xMinusXAvgMulyMinusYAvgSum = xMinusXAvgMulyMinusYAvgSum.add(xMinusXAvgMulyMinusYAvg);
+                var xMinusXAvgPow = Decimal.pow(xMinusXAvg, 2);
+                xMinusXAvgPowSum = xMinusXAvgPowSum.add(xMinusXAvgPow);
+                var yMinusYAvgPow = Decimal.pow(yMinusYAvg, 2);
+                yMinusYAvgPowSum = yMinusYAvgPowSum.add(yMinusYAvgPow);
+            }
+            var step1 = Decimal
+                .pow(xMinusXAvgPowSum, 0.5)
+                .mul(Decimal.pow(yMinusYAvgPowSum, 0.5));
+            var originR = xMinusXAvgMulyMinusYAvgSum.div(step1).abs().toString();
+            var roundedR = Rounder.roundDown(+originR, precision);
+            return roundedR || "";
+        }
+        catch (error) {
+            console.debug("CORREL claculate", "xList:", listx, "yList", listy, "precision", precision);
+        }
     };
     /**
      * 向下修约 可修约至`0.00`
@@ -5135,7 +5357,7 @@ var Rounder = /** @class */ (function () {
      * @returns sting
      */
     Rounder.prototype.roundDown = function (decimalPlace) {
-        return Rounder.RoundDown(Number(this.num), decimalPlace);
+        return Rounder.roundDown(Number(this.num), decimalPlace);
     };
     /**
      * 普通的四舍五入
@@ -5144,16 +5366,24 @@ var Rounder = /** @class */ (function () {
      * @returns {number} 修约后的数
      */
     Rounder.prototype.roundNormal = function (decimalPlace) {
-        return Rounder.RoundNormal(Number(this.num), decimalPlace);
+        return Rounder.roundNormal(Number(this.num), decimalPlace);
     };
     /**
      * 四舍六入五成双修约法
      * @param {number} decimalPlace 指定修约到第几小数位数，应当大于等于0
      */
-    Rounder.prototype.round = function (decimalPlace) {
-        return Rounder.Round(Number(this.num), decimalPlace);
+    Rounder.prototype.roundHalfToEven = function (decimalPlace) {
+        return Rounder.roundHalfToEven(Number(this.num), decimalPlace);
     };
-    Rounder.prototype.toString = function () {
+    /**
+     * 将一个数字修约到有效位
+     * @param {number} validDigit 有效位必须大于等于1 !!
+     */
+    Rounder.prototype.roundSignificantDigit = function (validDigit) {
+        if (validDigit === void 0) { validDigit = 1; }
+        return Rounder.roundSignificantDigit(this.num, validDigit);
+    };
+    Rounder.prototype.tostr = function () {
         return "".concat(this.num);
     };
     return Rounder;

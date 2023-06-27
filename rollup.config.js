@@ -3,16 +3,16 @@ import resolve from '@rollup/plugin-node-resolve';
 // import decimal from 'decimal.js'
 
 export default {
-  input: './index.ts',
+  input: "./index.ts",
   output: [
     {
-      file: 'index.common.js',
-      format: 'cjs'
+      file: "index.common.js",
+      format: "cjs",
     },
     {
-      file: 'index.umd.js',
-      format: 'es'
-    }
+      file: "index.es.js",
+      format: "es",
+    },
   ],
-  plugins: [typescript(), resolve()]
+  plugins: [typescript(), resolve({ mainFields: ["module", "main"] })],
 };
