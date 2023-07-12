@@ -91,30 +91,51 @@ class Rounder {
   }
 
   static roundSignificantDigit(num: string | number, digit: number): string {
-    if (digit <= 0) return `${num}`;
+    if (Number(digit) <= 0) return `${num}`;
 
-    let isNegtive = false;
+    let isNegtive = false
     if (Number(num) < 0) {
-      isNegtive = true;
+      isNegtive = true
       num = Math.abs(Number(num));
     } else if (Number(num) == 0) {
-      if (digit === 0) return "0";
-      let str = "0.";
+      if (digit === 0) return '0'
+      let str = '0.'
       for (let i = 0; i < digit; i++) {
-        str = str + "0";
+        str = str + '0'
       }
-      return str;
+      return str
     }
+    /**先对数字进行四舍五入到个位数，判断修约后的数字是否符合有效位要求 */
+    const firstRound = Rounder.roundNormal(Number(num), 0);
+    const firstRoundDecimalBeforeLen = decimal.log10(Math.abs(Number(firstRound))).floor().toNumber() + 1;
+    /**如果正好等于有效位 返回 */
+    if (firstRoundDecimalBeforeLen == Number(digit) && Number(firstRound) == Math.pow(10, digit - 1)) {
+      return firstRound;
+    }
+    /**如果数字已经有足够有效位，直接转科学记数法 */
+    if (Number(digit) < firstRoundDecimalBeforeLen) {
+      return Rounder.numToScientificStr(Number(num), digit);
+    }
+    /**上述是数字修约到个位数时，有效位>=的情况，以下是数字的有效位不足指定的有效位的情况 */
+    // decimalBeforeLen是判断数字个位以上的数字个数，如123->3, 123.32233->3
+    const decimalBeforeLen = decimal.log10(Math.abs(Number(num))).floor().toNumber() + 1;
+    // 缩放数字到修约位
+    const scale = new decimal(num).mul(decimal.pow(10, Number(digit) - decimalBeforeLen)).toNumber();
+    const scaleRounded = Rounder.roundNormal(scale, 0)
+    // 复原缩放的数字
+    const rounded = new decimal(scaleRounded).div(Math.pow(10, Number(digit) - decimalBeforeLen)).toString();
+    // 修约后的位数,数字修约后的位数决定了数字最终要保留的位数，如9.99修约到有效位2位，结果位10
+    const roundeddecimalBeforeLen = decimal.log10(Math.abs(Number(rounded))).floor().toNumber() + 1;
+    // 最终保留小数位
+    const roundPosDigit = digit - roundeddecimalBeforeLen;
 
-    const decimalBeforeLen: number = decimal.log10(num).floor().toNumber() + 1;
-    const roundPosDigit: number = digit - decimalBeforeLen;
-
-    let ret: string = `${num}`;
+    let ret: string = `${rounded}`;
     if (roundPosDigit < 0) {
-      ret = Rounder.numToScientificStr(Number(num), digit);
+      ret = Rounder.numToScientificStr(Number(rounded), digit)
     } else {
-      ret = Rounder.roundHalfToEven(Number(num), roundPosDigit);
+      ret = Rounder.roundHalfToEven(Number(rounded), roundPosDigit)
     }
+
     return isNegtive ? `-${ret}` : ret;
   }
 

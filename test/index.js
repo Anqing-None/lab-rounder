@@ -118,9 +118,9 @@ describe("labRounder", function () {
       strictEqual(r, "1.0×10³");
     })
 
-    it("roundSignificantDigit(9999, 5) -> 9.9990×10³", () => {
-      const r = Rounder.roundSignificantDigit(999, 2);
-      strictEqual(r, "9.9990×10³");
+    it("roundSignificantDigit(9999, 5) -> 99990", () => {
+      const r = Rounder.roundSignificantDigit(9999, 5);
+      strictEqual(r, "9999.0");
     })
     
   })
